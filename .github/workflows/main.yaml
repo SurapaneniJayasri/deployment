@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 permissions:
   issues: write
   contents: read
-  
+
 on:
   pull_request:
     branches: [ master ]
@@ -86,12 +86,22 @@ jobs:
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker stop my-python-app || true
-            docker rm my-python-app || true
-            docker rmi my-python-app || true
-            docker load -i ~/app/my-python-app.tar
-            docker run -d -p 80:80 --name my-python-app my-python-app
-            docker logs my-python-app
+            # Install Docker if not installed
+            if ! command -v docker &> /dev/null
+            then
+                echo "Installing Docker..."
+                sudo apt-get update
+                sudo apt-get install -y docker.io
+                sudo systemctl enable docker
+                sudo systemctl start docker
+            fi
+            sudo docker --version
+            sudo docker stop my-python-app || true
+            sudo docker rm my-python-app || true
+            sudo docker rmi my-python-app || true
+            sudo docker load -i ~/app/my-python-app.tar
+            sudo docker run -d -p 80:80 --name my-python-app my-python-app
+            sudo docker logs my-python-app
 
   production:
     needs: staging
@@ -103,7 +113,7 @@ jobs:
         uses: trstringer/manual-approval@v1
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: jayasri
+          approvers: pallavibandreddy
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -133,12 +143,22 @@ jobs:
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker stop my-python-app || true
-            docker rm my-python-app || true
-            docker rmi my-python-app || true
-            docker load -i ~/app/my-python-app.tar
-            docker run -d -p 80:80 --name my-python-app my-python-app
-            docker logs my-python-app
+            # Install Docker if not installed
+            if ! command -v docker &> /dev/null
+            then
+                echo "Installing Docker..."
+                sudo apt-get update
+                sudo apt-get install -y docker.io
+                sudo systemctl enable docker
+                sudo systemctl start docker
+            fi
+            sudo docker --version
+            sudo docker stop my-python-app || true
+            sudo docker rm my-python-app || true
+            sudo docker rmi my-python-app || true
+            sudo docker load -i ~/app/my-python-app.tar
+            sudo docker run -d -p 80:80 --name my-python-app my-python-app
+            sudo docker logs my-python-app
 
   notify:
     needs: production
@@ -159,6 +179,6 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: ${{ job.status == 'success' && 'good' || 'danger' }}
           SLACK_MESSAGE: |
-            *Deployment to Production* ${{ job.status == 'success' && '✅ Successful!' || '❌ Failed!' }}
+            Deployment to Production ${{ job.status == 'success' && '✅ Successful!' || '❌ Failed!' }}
             Repository: ${{ github.repository }}
             Commit: ${{ github.sha }}
