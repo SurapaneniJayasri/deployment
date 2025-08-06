@@ -1,22 +1,20 @@
-import pytest
-from app import app
+from flask import Flask, render_template, request
 
-@pytest.fixture
-def client():
-    app.testing = True
-    with app.test_client() as client:
-        yield client
+app = Flask(__name__)
 
-def test_home_page(client):
-    response = client.get('/')
-    assert response.status_code == 200
-    assert b'Book Library' in response.data
+books = [
+    {"title": "The Alchemist", "author": "Paulo Coelho"},
+    {"title": "Atomic Habits", "author": "James Clear"}
+]
 
-def test_add_book(client):
-    response = client.post('/add', data={
-        'title': '1984',
-        'author': 'George Orwell'
-    }, follow_redirects=True)
-    assert response.status_code == 200
-    assert b'1984' in response.data
-    assert b'George Orwell' in response.data
+@app.route('/')
+def index():
+    total = len(books)
+    return render_template("index.html", books=books, total=total)
+
+@app.route('/add', methods=['POST'])
+def add_book():
+    title = request.form['title']
+    author = request.form['author']
+    books.append({"title": title, "author": author})
+    return index()

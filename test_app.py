@@ -1,5 +1,5 @@
 import pytest
-from app import app
+from app import app  # NOT from app.app
 
 @pytest.fixture
 def client():
@@ -10,7 +10,7 @@ def client():
 def test_home_page(client):
     response = client.get('/')
     assert response.status_code == 200
-    assert b'Book Library' in response.data
+    assert b'Book Library' in response.data  # Update this text based on your template
 
 def test_add_book(client):
     response = client.post('/add', data={
